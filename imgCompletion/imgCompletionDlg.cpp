@@ -7,11 +7,7 @@
 #include "imgCompletionDlg.h"
 #include "afxdialogex.h"
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-
-using namespace cv;
+#include "work.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,9 +15,6 @@ using namespace cv;
 
 
 // CimgCompletionDlg dialog
-
-
-
 
 CimgCompletionDlg::CimgCompletionDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CimgCompletionDlg::IDD, pParent)
@@ -37,6 +30,10 @@ void CimgCompletionDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_bOpen, &CimgCompletionDlg::OnBnClickedbopen)
+	ON_BN_CLICKED(IDC_bRun, &CimgCompletionDlg::OnBnClickedbrun)
+	ON_BN_CLICKED(IDC_bOpen_t0, &CimgCompletionDlg::OnBnClickedbopent0)
+	ON_BN_CLICKED(IDC_bRun_t0, &CimgCompletionDlg::OnBnClickedbrunt0)
 END_MESSAGE_MAP()
 
 
@@ -94,6 +91,38 @@ HCURSOR CimgCompletionDlg::OnQueryDragIcon()
 
 void CimgCompletionDlg::onInit()
 {
-	namedWindow( "display", WINDOW_AUTOSIZE ); // Create a window for display.
-    //imshow( "display", image ); // Show our image inside it.
+}
+
+
+void CimgCompletionDlg::OnBnClickedbopen()
+{
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString pathname = dlgFile.GetPathName();
+		chrim_init(pathname);
+	}
+}
+
+
+void CimgCompletionDlg::OnBnClickedbrun()
+{
+	brute_force();
+}
+
+
+void CimgCompletionDlg::OnBnClickedbopent0()
+{
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString pathname = dlgFile.GetPathName();
+		texture_init(pathname);
+	}
+}
+
+
+void CimgCompletionDlg::OnBnClickedbrunt0()
+{
+	brute_force();
 }
