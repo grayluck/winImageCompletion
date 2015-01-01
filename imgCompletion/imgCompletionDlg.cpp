@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 
 #include "work.h"
+#include "graphcut.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,6 +35,8 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_bRun, &CimgCompletionDlg::OnBnClickedbrun)
 	ON_BN_CLICKED(IDC_bOpen_t0, &CimgCompletionDlg::OnBnClickedbopent0)
 	ON_BN_CLICKED(IDC_bRun_t0, &CimgCompletionDlg::OnBnClickedbrunt0)
+	ON_BN_CLICKED(IDC_bOpen_gc, &CimgCompletionDlg::OnBnClickedbopengc)
+	ON_BN_CLICKED(IDC_bRun_gc, &CimgCompletionDlg::OnBnClickedbrungc)
 END_MESSAGE_MAP()
 
 
@@ -91,6 +94,9 @@ HCURSOR CimgCompletionDlg::OnQueryDragIcon()
 
 void CimgCompletionDlg::onInit()
 {
+	// DEBUG
+	graphcut::graphcut_init("imgs/D20.bmp");
+	graphcut::runGraphcut();
 }
 
 
@@ -125,4 +131,20 @@ void CimgCompletionDlg::OnBnClickedbopent0()
 void CimgCompletionDlg::OnBnClickedbrunt0()
 {
 	brute_force();
+}
+
+
+void CimgCompletionDlg::OnBnClickedbopengc()
+{
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString pathname = dlgFile.GetPathName();
+		graphcut::graphcut_init(pathname);
+	}
+}
+
+void CimgCompletionDlg::OnBnClickedbrungc()
+{
+	graphcut::runGraphcut();
 }

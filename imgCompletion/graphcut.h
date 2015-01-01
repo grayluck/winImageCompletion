@@ -8,4 +8,5 @@ using namespace cv;
 namespace graphcut
 {
 	void graphcut_init(CString fname);	
+	void runGraphcut();
 }
