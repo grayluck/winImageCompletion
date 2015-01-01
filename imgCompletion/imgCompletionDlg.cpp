@@ -95,8 +95,8 @@ HCURSOR CimgCompletionDlg::OnQueryDragIcon()
 void CimgCompletionDlg::onInit()
 {
 	// DEBUG
-	graphcut::graphcut_init("imgs/D20.bmp");
-	graphcut::runGraphcut();
+	//graphcut::graphcut_init("imgs/bumpy2.bmp");
+	//graphcut::runGraphcut();
 }
 
 

@@ -10,12 +10,12 @@ namespace graphcut
 	int noww, nowh;	// width and height for current patch
 	int rest;
 	Mat img, imgDisp, ori;
+	Mat imgDeb;
 
-	const int maxn = 1001;
-	const int maxm = 100001;
+	const int maxm = 1000001;
 	const int inf = 10000000;	// cannot be 2147483647, it will incur overflow
 
-	int state[maxn][maxn];
+	int state[1024][1024];
 
 	char* title = "graphcut";
 
@@ -26,7 +26,6 @@ namespace graphcut
 	int con;
 	
 	int q[maxm];
-	int head, tail;
 
 	int dist[maxm];
 	int pre[maxm];
@@ -34,13 +33,18 @@ namespace graphcut
 	int n;
 
 	int fin;
+
+	//
+
+	FILE* fdeb;
 	
 	DWORD WINAPI drawGraphcut( LPVOID lpParam ) 
 	{
 		while(1)
 		{
 			imshow(title, imgDisp);
-			Sleep(100);
+			imshow("deb", imgDeb);
+			Sleep(10);
 		}
 	}
 
@@ -53,8 +57,7 @@ namespace graphcut
 
 	void addline(int st, int en, int inpf)
 	{
-		if(st >= n || en >= n)
-			st ++, st --;
+		inpf ++;
 		// bidirection edges
 		next[++con] = fir[st], fir[st] = con;
 		t[con] = en, f[con] = inpf;
@@ -62,8 +65,9 @@ namespace graphcut
 		t[con] = st, f[con] = inpf;
 	}
 
-	bool bfs()
+	bool bfs(int src)
 	{
+		int head, tail;
 		q[head=tail=0] = src;
 		for(int i = 0; i < n; ++i)
 			dist[i] = inf;
@@ -72,7 +76,7 @@ namespace graphcut
 		{
 			int p = q[head++];
 			for(int i = fir[p]; i; i = next[i])
-				if(f[i] && dist[t[i]] > dist[p] + 1)
+				if(f[src == 0 ? i : i^1] && dist[t[i]] > dist[p] + 1)
 				{
 					dist[t[i]] = dist[p] + 1;
 					q[++tail] = t[i];
@@ -80,6 +84,9 @@ namespace graphcut
 		}
 		return dist[targe] < inf;
 	}
+
+	int ret;
+	int ans;
 
 	void dfs(int p)
 	{
@@ -89,16 +96,27 @@ namespace graphcut
 			int minn = inf;
 			for(int i = targe; i != src; i = t[pre[i]^1])
 				minn = min(minn, f[pre[i]]);
+			ans += minn;
 			for(int i = targe; i != src; i = t[pre[i]^1])
+			{
 				f[pre[i]] -= minn, f[pre[i]^1] += minn;
+				if(!f[pre[i]])
+					ret = i;
+			}
 			return;
 		}
-		for(int i = fir[p]; i && !fin; i = next[i])
+		for(int i = fir[p]; i; i = next[i])
 			if(f[i] && dist[t[i]] == dist[p] + 1)
 			{
 				pre[t[i]] = i;
 				dfs(t[i]);
+				if(fin)
+					if(ret == i)
+						fin = ret =0;
+					else
+						return;
 			}
+		dist[p] = -1;
 	}
 
 	#define getn(x, y)	((x) * nowh + (y) + 1)
@@ -121,8 +139,8 @@ namespace graphcut
 		{
 			Point p = getPos();
 			src = 0;
-			noww = w - p.x;
-			nowh = h - p.y;
+			noww = min(w - p.x, ww);
+			nowh = min(h - p.y, hh);
 			n = noww * nowh + 2;
 			targe = n - 1;
 			con = 1;
@@ -169,36 +187,45 @@ namespace graphcut
 					if(mark == 1)
 						addline(src, pa,  inf);
 					else
+					if(mark == 2)
 						addline(pa, targe, inf);
 				}
 
 				// do donic
-				while(bfs())
+				while(bfs(src))
 				{
 					fin = 0;
 					dfs(src);
 				}
-
+				bfs(targe);
+				imgDeb = Mat::ones(h, w, CV_8UC3);
 				for(int i = 1; i < n - 1; ++i)
 				{
 					Point& tmpp = getp(i);
 					int x = tmpp.x, y = tmpp.y;
 					int px = p.x + x, py = p.y + y;
-					if(dist[i] >= inf)
+					if(dist[i] <inf)
 					{
+						//char buf[20];
+						//sprintf(buf, "%d %d\n", x, y);
 						// is filled by B
+						//TRACE(buf);
 						imgDisp.at<Vec3b>(Point(px, py)) = img.at<Vec3b>(Point(x, y));
+						imgDeb.at<Vec3b>(Point(px, py)) = Vec3b(255, 255, 255);
 						if(!state[px][py])
 							rest --, state[px][py] = 1;
 					}
 				}
+				//Sleep(1000);
 		}
 		return 0;
 	}
 
 	void graphcutReset()
 	{
+		ans = 0;
 		img = Mat::ones(h, w, CV_8UC3);
+		imgDeb = Mat::zeros(h, w, CV_8UC3);
 		for(int i = 0; i < w; ++i)
 			for(int j = 0; j < h; ++j)
 			{
@@ -225,9 +252,12 @@ namespace graphcut
 		char tmps[256];
 		strcpy(tmps, (LPCSTR)fname);
 		ori = imread(tmps, IMREAD_COLOR);
+		ww = ori.cols;
+		hh = ori.rows;
 		w = ori.cols * 2;
 		h = ori.rows * 2;
 		namedWindow(title , WINDOW_NORMAL ); // Create a window for display.
+		namedWindow("deb" , WINDOW_NORMAL ); // Create a window for display.
 		graphcutReset();
 		CreateThread(0, 0, drawGraphcut, 0, 0, 0);
 	}
