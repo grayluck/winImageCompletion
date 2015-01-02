@@ -56,3 +56,4 @@
 #endif
 
 
+#define getcol(img, x, y)	(img.at<Vec3b>(Point(x, y)))
