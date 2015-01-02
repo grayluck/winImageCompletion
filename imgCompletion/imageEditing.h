@@ -10,5 +10,5 @@ using namespace cv;
 namespace poi
 {
 	void poi_init(CString fSrc, CString fDest);
-	void poi_work(int _mode);
+	void changeMode(int _mode);
 }

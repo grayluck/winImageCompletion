@@ -39,6 +39,8 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_bOpen_gc, &CimgCompletionDlg::OnBnClickedbopengc)
 	ON_BN_CLICKED(IDC_bRun_gc, &CimgCompletionDlg::OnBnClickedbrungc)
 	ON_BN_CLICKED(IDC_bOpen_poi, &CimgCompletionDlg::OnBnClickedbopenpoi)
+	ON_CBN_EDITCHANGE(IDC_COMBO_METHOD, &CimgCompletionDlg::OnCbnEditchangeComboMethod)
+	ON_CBN_SELCHANGE(IDC_COMBO_METHOD, &CimgCompletionDlg::OnCbnSelchangeComboMethod)
 END_MESSAGE_MAP()
 
 
@@ -101,6 +103,7 @@ void CimgCompletionDlg::onInit()
 	//graphcut::runGraphcut();
 	//poi::poi_init("imgs/deb.png", "imgs/deb.png");
 	((CComboBox*)GetDlgItem(IDC_COMBO_PLACEMENT))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_COMBO_METHOD))->SetCurSel(0);
 }
 
 
@@ -166,4 +169,16 @@ void CimgCompletionDlg::OnBnClickedbopenpoi()
 			poi::poi_init(fSrc, fDest);
 		}
 	}
+}
+
+
+void CimgCompletionDlg::OnCbnEditchangeComboMethod()
+{
+}
+
+
+void CimgCompletionDlg::OnCbnSelchangeComboMethod()
+{
+	int tmp = ((CComboBox*)GetDlgItem(IDC_COMBO_METHOD))->GetCurSel();
+	poi::changeMode(tmp);
 }

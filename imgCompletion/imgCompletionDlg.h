@@ -37,4 +37,6 @@ public:
 	afx_msg void OnBnClickedbopengc();
 	afx_msg void OnBnClickedbrungc();
 	afx_msg void OnBnClickedbopenpoi();
+	afx_msg void OnCbnEditchangeComboMethod();
+	afx_msg void OnCbnSelchangeComboMethod();
 };

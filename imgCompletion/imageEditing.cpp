@@ -10,6 +10,8 @@ using namespace Eigen;
 namespace poi
 {
 	
+	int initiated = 0;
+
 	void poi_run();
 
 #define iscov(x, y)	(cov.at<Vec3b>(Point(x,y))[0] == 0)
@@ -26,7 +28,7 @@ namespace poi
 	int srcw, srch;
 	int destw, desth;
 
-	int mode = 1;	// 0: copy; 1: poisson(no holes); 2: poisson(holes)
+	int mode = 0;	// 0: copy; 1: poisson(no holes); 2: poisson(holes)
 	
 	int moused = 0;
 	int mousex, mousey;
@@ -134,6 +136,7 @@ namespace poi
 
 	void poi_init(CString fsrc, CString fdest)
 	{
+		initiated = 1;
 		char tmps[256];
 		strcpy(tmps, (LPCSTR)fsrc);
 		imgSrc = imread(tmps, IMREAD_COLOR);
@@ -171,10 +174,14 @@ namespace poi
 		redraw();
 	}
 	
-	void poi_work(int _mode)
+	void changeMode(int _mode)
 	{
 		mode = _mode;
-		poi_run();
+		if(initiated)
+		{
+			poi_run();
+			redraw();
+		}
 	}
 	
 	typedef Triplet<double> Tripd;
@@ -241,6 +248,15 @@ namespace poi
 		solver.compute(A);
 	}
 
+	int getNearestCol(int x, int y, int col)
+	{
+		x = max(x, 0);
+		x = min(x, destw);
+		y = max(y, 0);
+		y = min(y, desth);
+		return getcol(imgDest, x, y)[col];
+	}
+
 	void poi_singleChannel(int col)
 	{
 		b = VectorXd(indn);
@@ -257,17 +273,27 @@ namespace poi
 					if( x < 0 || y < 0 || x >= srcw || y >= srch)
 						continue;
 					int xx = x + destOffsetX, yy = y + destOffsetY;
+					int ox = i + destOffsetX, oy = j + destOffsetY;
 					int pp = getn(x, y);
 					if(!iscov(x, y))
 					{
 						// border q
-						if(xx < 0 || yy < 0 || x >= destw || y >= desth)
-							tmpb += getcol(imgSrc, x, y)[col];
-						else
-							tmpb += getcol(imgDest, x + destOffsetX, y + destOffsetY)[col];
+						tmpb += getNearestCol(xx, yy, col);
 					}else
 					{
-						tmpb +=  getcol(imgSrc, i, j)[col] - getcol(imgSrc, x, y)[col];
+						int vg = getcol(imgSrc, i, j)[col] - getcol(imgSrc, x, y)[col];
+						if(	xx < 0 || yy < 0 || xx >= destw || yy >= desth
+							|| ox < 0 || oy < 0 || ox >= destw || oy >= desth)
+							tmpb += 0;
+						else
+						{
+							int vf = getcol(imgDest, ox, oy)[col] - getcol(imgDest, xx, yy)[col];
+							if(abs(vf) > abs(vg))
+								tmpb += (mode == 2 ? vf : vg);
+							else
+								tmpb += vg;
+						}
+						//tmpb += vg;
 					}
 				}
 				b(p) = tmpb;
@@ -291,5 +317,7 @@ namespace poi
 		for(int i = 0; i < 3; ++i)
 			poi_singleChannel(i);
 	}
+
+
 
 }
