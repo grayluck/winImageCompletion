@@ -9,6 +9,7 @@
 
 #include "work.h"
 #include "graphcut.h"
+#include "imageEditing.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -37,6 +38,7 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_bRun_t0, &CimgCompletionDlg::OnBnClickedbrunt0)
 	ON_BN_CLICKED(IDC_bOpen_gc, &CimgCompletionDlg::OnBnClickedbopengc)
 	ON_BN_CLICKED(IDC_bRun_gc, &CimgCompletionDlg::OnBnClickedbrungc)
+	ON_BN_CLICKED(IDC_bOpen_poi, &CimgCompletionDlg::OnBnClickedbopenpoi)
 END_MESSAGE_MAP()
 
 
@@ -97,6 +99,7 @@ void CimgCompletionDlg::onInit()
 	// DEBUG
 	//graphcut::graphcut_init("imgs/bumpy2.bmp");
 	//graphcut::runGraphcut();
+	((CComboBox*)GetDlgItem(IDC_COMBO_PLACEMENT))->SetCurSel(0);
 }
 
 
@@ -146,5 +149,20 @@ void CimgCompletionDlg::OnBnClickedbopengc()
 
 void CimgCompletionDlg::OnBnClickedbrungc()
 {
-	graphcut::runGraphcut();
+	graphcut::runGraphcut(((CComboBox*)GetDlgItem(IDC_COMBO_PLACEMENT))->GetCurSel());
+}
+
+
+void CimgCompletionDlg::OnBnClickedbopenpoi()
+{
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString fSrc = dlgFile.GetPathName();
+		if(dlgFile.DoModal() == IDOK)
+		{
+			CString fDest = dlgFile.GetPathName();
+			poi::poi_init(fSrc, fDest);
+		}
+	}
 }

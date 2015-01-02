@@ -4,18 +4,21 @@
 
 namespace graphcut
 {
+	// 0 for entire match, 1 for random
+	int placeMode;
 	
 	int w, h;	// screen width and height
 	int ww, hh;	// origin width and height
 	int noww, nowh;	// width and height for current patch
 	int rest;
 	Mat img, imgDisp, ori;
-	Mat imgDeb;
+	Mat imgDeb, tmpImg;
 
+	const int maxn = 1024;
 	const int maxm = 1000001;
 	const int inf = 10000000;	// cannot be 2147483647, it will incur overflow
 
-	int state[1024][1024];
+	int state[maxn][maxn];
 
 	char* title = "graphcut";
 
@@ -34,7 +37,8 @@ namespace graphcut
 
 	int fin;
 
-	//
+	// add additional arcs for old seams
+	int onedge[maxn][maxn][4];
 
 	FILE* fdeb;
 	
@@ -48,8 +52,38 @@ namespace graphcut
 		}
 	}
 
+	const double k = 1;
+	const double sigma = 1;
+
 	Point getPos()
 	{
+		if(placeMode == 0)
+		{
+			while(1)
+			{
+				int cnt = 0;
+				int tot = 0;
+				int x = rand() % w;
+				int y = rand() % h;
+				noww = min(w - x, ww);
+				nowh = min(h - y, hh);
+				for(int i = 0; i < noww; ++i)
+					for(int j = 0; j < nowh; ++j)
+						if(state[x + i][y + j])
+						{
+							cnt ++;
+							Vec3b& colDisp = imgDisp.at<Vec3b>(Point(x + i, y +j));
+							Vec3b& colnew = img.at<Vec3b>(Point(i, j));
+							Vec3b tmpv = colDisp - colnew;
+							tot += tmpv.dot(tmpv);
+						}
+				if(!cnt)	continue;
+				double c = (double)tot / cnt;
+				double p = exp(-c/(sigma*sigma*k));
+				if((double)rand()/RAND_MAX < p)
+					return Point(x, y);
+			}
+		}
 		int x = rand() % w;
 		int y = rand() % h;
 		return Point(x, y);
@@ -174,9 +208,20 @@ namespace graphcut
 									// it is an inner node
 									// add a arc
 									if(dir < 2)	// avoid adding an edge twice
-									addline(pa, pda, getv(imgDisp, x, y, img, i, j)
-										+ getv(	imgDisp, dx, dy,
-												img, i + dirx[dir], j + diry[dir]));
+										if(!onedge[x][y][dir])
+											addline(pa, pda, getv(imgDisp, x, y, img, i, j)
+												+ getv(	imgDisp, dx, dy,
+														img, i + dirx[dir], j + diry[dir]));
+										else
+										{
+											fir[n] = 0;
+											addline(n, targe, onedge[x][y][dir]);
+											addline(pa, n,	getv(imgDisp, x, y, img, i, j)
+														+	getv(tmpImg, dx, dy, img, i + dirx[dir], j + diry[dir]));
+											addline(n, pda,	getv(tmpImg, x, y, img, i, j)
+														+	getv(imgDisp, dx, dy, img, i + dirx[dir], j + diry[dir]));
+											n++;
+										}
 								}
 							}
 							else
@@ -199,10 +244,47 @@ namespace graphcut
 				}
 				bfs(targe);
 				imgDeb = Mat::ones(h, w, CV_8UC3);
-				for(int i = 1; i < n - 1; ++i)
+				for(int x = 0; x < noww; ++x)
+				for(int y = 0; y < nowh; ++y)
 				{
-					Point& tmpp = getp(i);
-					int x = tmpp.x, y = tmpp.y;
+					int i = getn(x, y);
+					int px = p.x + x, py = p.y + y;
+					// get cut-arc info
+					for(int dir = 0; dir < 2; ++dir)
+					{
+						int pxx = px + dirx[dir], pyy = py + diry[dir];
+						if(pxx < 0 || pyy < 0 || pxx >= noww || pyy >= nowh)
+							continue;
+						int j = getn(pxx, pyy);
+						if(dist[j] <inf)
+						{
+							if(dist[i] < inf)
+								onedge[px][py][dir] = 0;
+							else
+							{
+								onedge[px][py][dir] = 
+										getv(	imgDisp, px, py, img, x, y)
+									+	getv(	imgDisp, px + dirx[dir], py + diry[dir],
+												img, x + dirx[dir], y + diry[dir]);
+								tmpImg.at<Vec3b>(Point(px, py)) = img.at<Vec3b>(Point(x, y));
+								tmpImg.at<Vec3b>(Point(pxx, pyy)) = imgDisp.at<Vec3b>(Point(pxx, pyy));
+							}
+						}else
+							if(dist[i] < inf)
+							{
+								onedge[px][py][dir] = 
+										getv(	imgDisp, px, py, img, x, y)
+									+	getv(	imgDisp, px + dirx[dir], py + diry[dir],
+												img, x + dirx[dir], y + diry[dir]);
+								tmpImg.at<Vec3b>(Point(px, py)) = imgDisp.at<Vec3b>(Point(px, py));
+								tmpImg.at<Vec3b>(Point(pxx, pyy)) = img.at<Vec3b>(Point(x + dirx[dir], y + diry[dir]));
+							}
+					}
+				}
+				for(int x = 0; x < noww; ++x)
+				for(int y = 0; y < nowh; ++y)
+				{
+					int i = getn(x, y);
 					int px = p.x + x, py = p.y + y;
 					if(dist[i] <inf)
 					{
@@ -226,6 +308,7 @@ namespace graphcut
 		ans = 0;
 		img = Mat::ones(h, w, CV_8UC3);
 		imgDeb = Mat::zeros(h, w, CV_8UC3);
+		tmpImg = Mat::zeros(h, w, CV_8UC3);
 		for(int i = 0; i < w; ++i)
 			for(int j = 0; j < h; ++j)
 			{
@@ -262,8 +345,9 @@ namespace graphcut
 		CreateThread(0, 0, drawGraphcut, 0, 0, 0);
 	}
 	
-	void runGraphcut()
+	void runGraphcut(int _placeMode)
 	{
+		placeMode = _placeMode;
 		CreateThread(0, 0, workGraphcut, 0, 0, 0);
 	}
 

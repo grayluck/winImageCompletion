@@ -36,4 +36,5 @@ public:
 	afx_msg void OnBnClickedbrunt0();
 	afx_msg void OnBnClickedbopengc();
 	afx_msg void OnBnClickedbrungc();
+	afx_msg void OnBnClickedbopenpoi();
 };

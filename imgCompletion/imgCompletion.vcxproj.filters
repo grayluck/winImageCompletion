@@ -45,6 +45,9 @@
     <ClInclude Include="graphcut.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="imageEditing.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgCompletion.cpp">
@@ -60,6 +63,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="graphcut.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="imageEditing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
