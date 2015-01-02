@@ -284,7 +284,7 @@ namespace poi
 						int vg = getcol(imgSrc, i, j)[col] - getcol(imgSrc, x, y)[col];
 						if(	xx < 0 || yy < 0 || xx >= destw || yy >= desth
 							|| ox < 0 || oy < 0 || ox >= destw || oy >= desth)
-							tmpb += 0;
+							tmpb += getNearestCol(ox, oy, col) - getNearestCol(xx, yy, col);
 						else
 						{
 							int vf = getcol(imgDest, ox, oy)[col] - getcol(imgDest, xx, yy)[col];
