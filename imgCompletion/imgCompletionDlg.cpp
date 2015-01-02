@@ -99,6 +99,7 @@ void CimgCompletionDlg::onInit()
 	// DEBUG
 	//graphcut::graphcut_init("imgs/bumpy2.bmp");
 	//graphcut::runGraphcut();
+	//poi::poi_init("imgs/deb.png", "imgs/deb.png");
 	((CComboBox*)GetDlgItem(IDC_COMBO_PLACEMENT))->SetCurSel(0);
 }
 

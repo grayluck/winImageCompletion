@@ -57,3 +57,4 @@
 
 
 #define getcol(img, x, y)	(img.at<Vec3b>(Point(x, y)))
+#define rectify(a)	(a<0?0:(a>255?255:a))

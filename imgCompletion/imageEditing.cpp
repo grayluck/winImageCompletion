@@ -48,7 +48,7 @@ namespace poi
 					continue;
 				Vec3b& vec = getcol(cov, x, y);
 				if(!vec[0])
-					imgDispDest.at<Vec3b>(Point(i, j)) = imgSrc.at<Vec3b>(Point(x, y));
+					imgDispDest.at<Vec3b>(Point(i, j)) = res.at<Vec3b>(Point(x, y));
 			}
 		imshow(titleDest, imgDispDest);
 	}
@@ -88,6 +88,10 @@ namespace poi
 			//circle(cov, Point(x, y), brushr, Scalar(0), CV_FILLED);
 			imgDispSrc = imgSrc.clone().mul(cov);
 			mousex = x, mousey = y;
+			redraw();
+		}
+		if(event == CV_EVENT_LBUTTONUP || event == CV_EVENT_RBUTTONUP)
+		{
 			renewA();
 			poi_run();
 			redraw();
@@ -119,6 +123,10 @@ namespace poi
 			destOffsetX += x - mousex;
 			destOffsetY += y - mousey;
 			mousex = x, mousey = y;
+			redraw();
+		}
+		if(event == CV_EVENT_LBUTTONUP)
+		{
 			poi_run();
 			redraw();
 		}
@@ -151,9 +159,15 @@ namespace poi
 			{
 				Vec3b& col = cov.at<Vec3b>(Point(i,j));
 				col[0] = col[1] = col[2] = 1;
+				/*
+				if((i == 1 || i == 2) && (j == 1 || j == 2))
+					col[0] = col[1] = 0;
+				*/
 			}
 		imgDispSrc = imgSrc.clone();
 		imgDispDest = imgDest.clone();
+		renewA();
+		poi_run();
 		redraw();
 	}
 	
@@ -169,67 +183,94 @@ namespace poi
 	SparseMatrix<double> A;
 	SimplicialLDLT<SparseMatrix<double> > solver;
 
-#define getn(x, y)	(x * srch + y)
-#define getp(i)		(Point(i/srch, i%srch))
+#define getn(x, y)	(ind[x][y])
+#define getp(i)		(Point(indx[i], indy[i]))
 	
 	int dirx[4] = {-1, 0, 0, 1};
 	int diry[4] = {0, -1, 1, 0};
 
+	const int maxn = 1024;
+	int ind[maxn][maxn];
+	int indx[maxn*maxn];
+	int indy[maxn*maxn];
+	int indn;
+
+	void updateInd()
+	{
+		indn = 0;
+		for(int i = 0; i < srcw; ++i)
+			for(int j = 0; j < srch; ++j)
+				if(iscov(i, j))
+				{
+					ind[i][j] = indn;
+					indx[indn] = i;
+					indy[indn] = j;
+					indn++;
+				}
+	}
+
 	void renewA()
 	{
 		tripletList.clear();
-		int n = 0;
+		updateInd();
 		for(int i = 0; i < srcw; ++i)
 			for(int j = 0; j < srch; ++j)
 			{
 				if(!iscov(i, j))
 					continue;
 				int p = getn(i, j);
-				tripletList.push_back(Tripd(n, p, 4));
 				double tmpb = 0;
+				int cnt = 0;
 				for(int dir = 0;dir < 4; ++dir)
 				{
 					int x = i + dirx[dir], y = j + diry[dir];
 					if( x < 0 || y < 0 || x >= srcw || y >= srch)
 						continue;
+					cnt ++;
 					int pp = getn(x, y);
 					if(iscov(x, y))
 					{
 						// inner q
-						tripletList.push_back(Tripd(n, pp, -1));
+						tripletList.push_back(Tripd(p, pp, -1));
 					}
 				}
+				tripletList.push_back(Tripd(p, p, cnt));
 			}
+		A = SparseMatrix<double>(indn, indn);
 		A.setFromTriplets(tripletList.begin(), tripletList.end());
 		solver.compute(A);
 	}
 
 	void poi_singleChannel(int col)
 	{
-		b.resize(0);
-		int n = 0;
+		b = VectorXd(indn);
 		for(int i = 0; i < srcw; ++i)
 			for(int j = 0; j < srch; ++j)
 			{
 				if(!iscov(i, j))
 					continue;
 				int p = getn(i, j);
-				tripletList.push_back(Tripd(n, p, 4));
 				double tmpb = 0;
 				for(int dir = 0;dir < 4; ++dir)
 				{
 					int x = i + dirx[dir], y = j + diry[dir];
 					if( x < 0 || y < 0 || x >= srcw || y >= srch)
 						continue;
+					int xx = x + destOffsetX, yy = y + destOffsetY;
 					int pp = getn(x, y);
 					if(!iscov(x, y))
 					{
 						// border q
-						tmpb += getcol(imgDest, x + destOffsetX, y + destOffsetY)[col];
+						if(xx < 0 || yy < 0 || x >= destw || y >= desth)
+							tmpb += getcol(imgSrc, x, y)[col];
+						else
+							tmpb += getcol(imgDest, x + destOffsetX, y + destOffsetY)[col];
+					}else
+					{
 						tmpb +=  getcol(imgSrc, i, j)[col] - getcol(imgSrc, x, y)[col];
 					}
 				}
-				b << tmpb;
+				b(p) = tmpb;
 			}
 		VectorXd x = solver.solve(b);
 		for(int i = 0; i < srcw; ++i)
@@ -238,17 +279,15 @@ namespace poi
 				if(!iscov(i, j))
 					continue;
 				int p = getn(i, j);
-				getcol(res, i, j)[col] = x[p];
+				getcol(res, i, j)[col] = rectify(x[p]);
 			}
 	}
 
 	void poi_run()
 	{
+		res = imgSrc.clone();
 		if(mode == 0)
-		{
-			res = imgSrc;
 			return;
-		}
 		for(int i = 0; i < 3; ++i)
 			poi_singleChannel(i);
 	}
