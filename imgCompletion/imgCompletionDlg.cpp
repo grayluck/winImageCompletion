@@ -119,6 +119,7 @@ void CimgCompletionDlg::onInit()
 	sldClrz->SetPos(10);
 	cbClrz->EnableOtherButton(_T("custom")); 
     cbClrz->SetColor(RGB(100, 100, 255)); 
+	OnBnClickedMfccolorbutton1clrz();
 	//clrz::init("imgs/colorize/deb.png");
 }
 
@@ -247,6 +248,6 @@ void CimgCompletionDlg::OnBnClickedButton1()
 	if(dlgFile.DoModal() == IDOK)
 	{
 		CString pathname = dlgFile.GetPathName();
-		clrz::openref(pathname);
+		clrz::openref(pathname, cbClrz);
 	}
 }

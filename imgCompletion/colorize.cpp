@@ -47,6 +47,24 @@ namespace clrz
 		out[1] = 255 * dg;
 		out[0] = 255 * db;
 	}
+	
+	Mat imgRef;
+	CMFCColorButton* cbClrz;
+
+	char* titleRef = "colorize :: reference image";
+	
+	void onSelMouse( int event, int x, int y, int, void* );
+
+	void openref(CString fname, CMFCColorButton* _cbClrz)
+	{
+		char tmps[256];
+		strcpy(tmps, (LPCSTR)fname);
+		imgRef = imread(tmps, IMREAD_COLOR);
+		namedWindow(titleRef, WINDOW_NORMAL);
+		setMouseCallback(titleRef, onSelMouse);
+		imshow(titleRef, imgRef);
+		cbClrz = _cbClrz;
+	}
 
 	void redraw()
 	{
@@ -64,17 +82,16 @@ namespace clrz
 		brushr = r;
 	}
 
-	Mat imgRef;
-
-	void openref(CString fname)
-	{
-		char tmps[256];
-		strcpy(tmps, (LPCSTR)fname);
-		imgRef = imread(tmps, IMREAD_COLOR);
-		imshow("colorize :: color reference", imgRef);
-	}
-
 	void work();
+	
+	void onSelMouse( int event, int x, int y, int, void* )
+	{
+		if(event != CV_EVENT_LBUTTONDOWN)
+			return;
+		Vec3b tmp = getcol(imgRef, x, y);
+		cbClrz->SetColor(RGB(tmp[2], tmp[1], tmp[0]));
+		setColor(RGB(tmp[2], tmp[1], tmp[0]));
+	}
 
 	void onMouse( int event, int x, int y, int, void* )
 	{
@@ -108,7 +125,12 @@ namespace clrz
 			line(cov, Point(mousex, mousey), Point(x, y), (moused==1?Scalar(1,1,1):Scalar(0,0,0)),brushr);
 			line(col, Point(mousex, mousey), Point(x, y), colSelected, brushr);
 			//circle(cov, Point(x, y), brushr, Scalar(0), CV_FILLED);
-			imgDisp = col.mul(cov) + img.mul(allone - cov);
+			for(int i = 0; i < w; ++i)
+				for(int j = 0; j < h; ++j)
+					if(getcol(cov, i, j)[0])
+						getcol(imgDisp, i, j) = getcol(col, i, j);
+					else
+						getcol(imgDisp, i, j) = getcol(img, i, j);
 			mousex = x, mousey = y;
 			redraw();
 		}
@@ -174,10 +196,9 @@ namespace clrz
 	double debLst[maxn*maxn][3];
 
 #define getn(x, y)	(x * h + y)
-	
-	DWORD WINAPI workSingleChannel(LPVOID params)
+
+	void workSingleChannel(int channel)
 	{
-		int channel = (int)params;
 		tripletList.clear();
 		b = VectorXd(w * h);
 		for(int i = 0; i < w; ++i)
@@ -260,14 +281,8 @@ namespace clrz
 				rgb2yuv(getcol(col, i, j), colYUV[i][j]);
 				rgb2yuv(getcol(img, i, j), resYUV[i][j]);
 			}
-		HANDLE thd[3];
 		for(int i = 1; i < 3; ++i)
-		{
-			//workSingleChannel(i);
-			thd[i] = CreateThread(0, 0, workSingleChannel, (void*)i, 0, 0);
-		}
-		for(int i = 1; i < 3; ++i)
-			WaitForSingleObject(thd[i], INFINITE);
+			workSingleChannel(i);
 		for(int i = 0; i < w; ++i)
 			for(int j = 0; j < h; ++j)
 				yuv2rgb(resYUV[i][j], getcol(res, i, j));

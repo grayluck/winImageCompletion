@@ -10,5 +10,5 @@ namespace clrz	// Colorize
 	void init(CString fname);
 	void setColor(COLORREF col);
 	void setPenWidth(int r);
-	void openref(CString fname);
+	void openref(CString fname, CMFCColorButton* _cbClrz);
 }
