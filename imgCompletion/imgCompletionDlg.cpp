@@ -46,6 +46,7 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_bOpen_clrz, &CimgCompletionDlg::OnBnClickedbopenclrz)
 	ON_BN_CLICKED(IDC_MFCCOLORBUTTON1_clrz, &CimgCompletionDlg::OnBnClickedMfccolorbutton1clrz)
 	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_CLRZ, &CimgCompletionDlg::OnNMReleasedcaptureSliderClrz)
+	ON_BN_CLICKED(IDC_BUTTON1, &CimgCompletionDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -116,6 +117,9 @@ void CimgCompletionDlg::onInit()
 	sldClrz = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER_CLRZ));
 	sldClrz->SetRange(2, 25);
 	sldClrz->SetPos(10);
+	cbClrz->EnableOtherButton(_T("custom")); 
+    cbClrz->SetColor(RGB(100, 100, 255)); 
+	//clrz::init("imgs/colorize/deb.png");
 }
 
 
@@ -234,4 +238,15 @@ void CimgCompletionDlg::OnNMReleasedcaptureSliderClrz(NMHDR *pNMHDR, LRESULT *pR
 {
 	clrz::setPenWidth(sldClrz->GetPos());
 	*pResult = 0;
+}
+
+
+void CimgCompletionDlg::OnBnClickedButton1()
+{
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString pathname = dlgFile.GetPathName();
+		clrz::openref(pathname);
+	}
 }

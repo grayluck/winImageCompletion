@@ -43,4 +43,5 @@ public:
 	afx_msg void OnBnClickedbopenclrz();
 	afx_msg void OnBnClickedMfccolorbutton1clrz();
 	afx_msg void OnNMReleasedcaptureSliderClrz(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedButton1();
 };
