@@ -10,6 +10,7 @@
 #include "work.h"
 #include "graphcut.h"
 #include "imageEditing.h"
+#include "colorize.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -41,6 +42,10 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_bOpen_poi, &CimgCompletionDlg::OnBnClickedbopenpoi)
 	ON_CBN_EDITCHANGE(IDC_COMBO_METHOD, &CimgCompletionDlg::OnCbnEditchangeComboMethod)
 	ON_CBN_SELCHANGE(IDC_COMBO_METHOD, &CimgCompletionDlg::OnCbnSelchangeComboMethod)
+	ON_NOTIFY(BCN_HOTITEMCHANGE, IDC_MFCCOLORBUTTON1_clrz, &CimgCompletionDlg::OnBnHotItemChangeMfccolorbutton1clrz)
+	ON_BN_CLICKED(IDC_bOpen_clrz, &CimgCompletionDlg::OnBnClickedbopenclrz)
+	ON_BN_CLICKED(IDC_MFCCOLORBUTTON1_clrz, &CimgCompletionDlg::OnBnClickedMfccolorbutton1clrz)
+	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_CLRZ, &CimgCompletionDlg::OnNMReleasedcaptureSliderClrz)
 END_MESSAGE_MAP()
 
 
@@ -96,6 +101,9 @@ HCURSOR CimgCompletionDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+CMFCColorButton* cbClrz;
+CSliderCtrl* sldClrz;
+
 void CimgCompletionDlg::onInit()
 {
 	// DEBUG
@@ -104,6 +112,10 @@ void CimgCompletionDlg::onInit()
 	//poi::poi_init("imgs/deb.png", "imgs/deb.png");
 	((CComboBox*)GetDlgItem(IDC_COMBO_PLACEMENT))->SetCurSel(0);
 	((CComboBox*)GetDlgItem(IDC_COMBO_METHOD))->SetCurSel(0);
+	cbClrz = ((CMFCColorButton*)GetDlgItem(IDC_MFCCOLORBUTTON1_clrz));
+	sldClrz = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER_CLRZ));
+	sldClrz->SetRange(2, 25);
+	sldClrz->SetPos(10);
 }
 
 
@@ -181,4 +193,45 @@ void CimgCompletionDlg::OnCbnSelchangeComboMethod()
 {
 	int tmp = ((CComboBox*)GetDlgItem(IDC_COMBO_METHOD))->GetCurSel();
 	poi::changeMode(tmp);
+}
+
+
+void CimgCompletionDlg::OnBnHotItemChangeMfccolorbutton1clrz(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMBCHOTITEM pHotItem = reinterpret_cast<LPNMBCHOTITEM>(pNMHDR);
+	*pResult = 0;
+	/*
+	// deprecated
+	COLORREF col = cbClrz->GetColor();
+	if(col == -1)
+		col = cbClrz->GetAutomaticColor();
+	clrz::setColor(col);
+	*/
+}
+
+
+void CimgCompletionDlg::OnBnClickedbopenclrz()
+{
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString pathname = dlgFile.GetPathName();
+		clrz::init(pathname);
+	}
+}
+
+
+void CimgCompletionDlg::OnBnClickedMfccolorbutton1clrz()
+{
+	COLORREF col = cbClrz->GetColor();
+	if(col == -1)
+		col = cbClrz->GetAutomaticColor();
+	clrz::setColor(col);
+}
+
+
+void CimgCompletionDlg::OnNMReleasedcaptureSliderClrz(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	clrz::setPenWidth(sldClrz->GetPos());
+	*pResult = 0;
 }

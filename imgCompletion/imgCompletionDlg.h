@@ -39,4 +39,8 @@ public:
 	afx_msg void OnBnClickedbopenpoi();
 	afx_msg void OnCbnEditchangeComboMethod();
 	afx_msg void OnCbnSelchangeComboMethod();
+	afx_msg void OnBnHotItemChangeMfccolorbutton1clrz(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedbopenclrz();
+	afx_msg void OnBnClickedMfccolorbutton1clrz();
+	afx_msg void OnNMReleasedcaptureSliderClrz(NMHDR *pNMHDR, LRESULT *pResult);
 };

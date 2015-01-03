@@ -110,6 +110,7 @@
     <None Include="res\imgCompletion.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="colorize.h" />
     <ClInclude Include="graphcut.h" />
     <ClInclude Include="imageEditing.h" />
     <ClInclude Include="work.h" />
@@ -120,6 +121,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="colorize.cpp" />
     <ClCompile Include="graphcut.cpp" />
     <ClCompile Include="work.cpp" />
     <ClCompile Include="imgCompletion.cpp" />
