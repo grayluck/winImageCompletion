@@ -339,8 +339,8 @@ namespace graphcut
 		hh = ori.rows;
 		w = ori.cols * 2;
 		h = ori.rows * 2;
-		namedWindow(title , WINDOW_NORMAL ); // Create a window for display.
-		namedWindow("deb" , WINDOW_NORMAL ); // Create a window for display.
+		namedWindow(title , WINDOW_AUTOSIZE ); // Create a window for display.
+		namedWindow("deb" , WINDOW_AUTOSIZE ); // Create a window for display.
 		graphcutReset();
 		CreateThread(0, 0, drawGraphcut, 0, 0, 0);
 	}
