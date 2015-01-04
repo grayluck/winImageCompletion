@@ -51,6 +51,9 @@
     <ClInclude Include="colorize.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="decolorize.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgCompletion.cpp">
@@ -72,6 +75,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="colorize.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="decolorize.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

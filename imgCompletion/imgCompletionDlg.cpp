@@ -47,6 +47,7 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_MFCCOLORBUTTON1_clrz, &CimgCompletionDlg::OnBnClickedMfccolorbutton1clrz)
 	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_CLRZ, &CimgCompletionDlg::OnNMReleasedcaptureSliderClrz)
 	ON_BN_CLICKED(IDC_BUTTON1, &CimgCompletionDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_bOpen_dec, &CimgCompletionDlg::OnBnClickedbopendec)
 END_MESSAGE_MAP()
 
 
@@ -250,4 +251,10 @@ void CimgCompletionDlg::OnBnClickedButton1()
 		CString pathname = dlgFile.GetPathName();
 		clrz::openref(pathname, cbClrz);
 	}
+}
+
+
+void CimgCompletionDlg::OnBnClickedbopendec()
+{
+	// TODO: 在此添加控件通知处理程序代码
 }
