@@ -45,4 +45,6 @@ public:
 	afx_msg void OnNMReleasedcaptureSliderClrz(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedbopendec();
+	afx_msg void OnNMReleasedcaptureSliderDecAlpha(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMReleasedcaptureSliderDecTheta(NMHDR *pNMHDR, LRESULT *pResult);
 };

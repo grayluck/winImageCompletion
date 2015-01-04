@@ -9,7 +9,7 @@ const int maxn = 2048;
 
 Mat img, imgRes;
 
-int h, w;
+int h, w, n;
 
 double res[maxn*maxn];
 double delta[maxn*maxn];
@@ -20,7 +20,7 @@ char* titleDest = "Decolorize :: result";
 
 void work();
 
-double theta, alpha;
+double theta = 45, alpha = 10;
 
 void redraw()
 {
@@ -37,6 +37,7 @@ void init(CString fname)
 	namedWindow(titleDest, WINDOW_NORMAL);
 	h = img.rows;
 	w = img.cols;
+	n = w * h;
 	imgRes = Mat::zeros(h, w, CV_8UC1);
 	work();
 	redraw();
@@ -61,17 +62,26 @@ void rgb2lab(Vec3b& col, double *res)
 	b = 200 * (yy - zz);
 }
 
+int lab2rgb(double res)
+{
+	double p = (res + 16) / 116;
+	double ppp = p * p * p;
+	double x = 0.9513 * ppp;
+	double y = ppp;
+	double z = 1.0886 * ppp;
+	double r = 3.240479f*x + -1.537150f*y +  -0.498535f*z;
+	return rectify(r * 255);
+}
+
 #define crunch(a)	(abs(alpha)<1e-7?0:alpha*tanh((a)/alpha))
 
-void work()
-{
-	// convert from rgb to lab
-	int n = w * h;
-	for(int i = 0; i < n; ++i)
-		rgb2lab(getcol(img, i/h, i%h), ori[i]);
+int now;
 
-	// calculate delta
-	for(int i = 0; i < n; ++i)
+DWORD WINAPI calcDelta(LPVOID params)
+{
+	while(now < n)
+	{
+		int i = now++;
 		for(int j = i+1; j < n; ++j)
 		{
 			double* p = ori[i];
@@ -90,7 +100,26 @@ void work()
 			delta[i] += tmp;
 			delta[j] -= tmp;
 		}
+	}
+	return 0;
+}
 
+void work()
+{
+	// convert from rgb to lab
+	for(int i = 0; i < n; ++i)
+	{
+		rgb2lab(getcol(img, i/h, i%h), ori[i]);
+		res[i] = delta[i] = 0;
+	}
+
+	// calculate delta
+	HANDLE thd[8];
+	now = 0;
+	for(int i = 0; i < 8; ++i)
+		thd[i] = CreateThread(0, 0, calcDelta, 0, 0, 0);
+	for(int i = 0; i < 8; ++i)
+		WaitForSingleObject(thd[i], INFINITE);
 	// calculate result
 	for(int i = 1; i < n; ++i)
 		res[i] = ( delta[i] - delta[i-1] + n * res[i-1]) / n;
@@ -99,11 +128,27 @@ void work()
 		sum += res[i] - ori[i][0];
 	sum /= n;
 	for(int i = 0; i < n; i++)
-		res[i] = (res[i] - sum) * 255;
+		res[i] = res[i] - sum;
 
 	// output img
 	for(int i = 0; i < n; ++i)
-		getcol(imgRes, i/h, i%h) = Vec3b(res[i], res[i], res[i]);
+	{
+		imgRes.at<uchar>(Point(i/h, i%h)) = lab2rgb(res[i]);
+	}
+}
+
+void onThetaChanged(int _theta)
+{
+	theta = _theta;
+	work();
+	redraw();
+}
+
+void onAlphaChanged(int _alpha)
+{
+	alpha = _alpha;
+	work();
+	redraw();
 }
 
 }

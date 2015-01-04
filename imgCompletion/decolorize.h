@@ -8,4 +8,6 @@ using namespace cv;
 namespace dec
 {
 	void init(CString fname);
+	void onThetaChanged(int _theta);
+	void onAlphaChanged(int _alpha);
 }

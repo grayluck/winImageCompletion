@@ -11,6 +11,7 @@
 #include "graphcut.h"
 #include "imageEditing.h"
 #include "colorize.h"
+#include "decolorize.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,6 +49,8 @@ BEGIN_MESSAGE_MAP(CimgCompletionDlg, CDialogEx)
 	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_CLRZ, &CimgCompletionDlg::OnNMReleasedcaptureSliderClrz)
 	ON_BN_CLICKED(IDC_BUTTON1, &CimgCompletionDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_bOpen_dec, &CimgCompletionDlg::OnBnClickedbopendec)
+	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_DEC_ALPHA, &CimgCompletionDlg::OnNMReleasedcaptureSliderDecAlpha)
+	ON_NOTIFY(NM_RELEASEDCAPTURE, IDC_SLIDER_DEC_THETA, &CimgCompletionDlg::OnNMReleasedcaptureSliderDecTheta)
 END_MESSAGE_MAP()
 
 
@@ -104,7 +107,7 @@ HCURSOR CimgCompletionDlg::OnQueryDragIcon()
 }
 
 CMFCColorButton* cbClrz;
-CSliderCtrl* sldClrz;
+CSliderCtrl* sldClrz, *sldDecAlpha, *sldDecTheta;
 
 void CimgCompletionDlg::onInit()
 {
@@ -115,9 +118,18 @@ void CimgCompletionDlg::onInit()
 	((CComboBox*)GetDlgItem(IDC_COMBO_PLACEMENT))->SetCurSel(0);
 	((CComboBox*)GetDlgItem(IDC_COMBO_METHOD))->SetCurSel(0);
 	cbClrz = ((CMFCColorButton*)GetDlgItem(IDC_MFCCOLORBUTTON1_clrz));
+
 	sldClrz = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER_CLRZ));
 	sldClrz->SetRange(2, 25);
 	sldClrz->SetPos(10);
+	
+	sldDecAlpha = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER_DEC_ALPHA));
+	sldDecAlpha->SetRange(1, 30);
+	sldDecAlpha->SetPos(10);
+	sldDecTheta = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER_DEC_THETA));
+	sldDecTheta->SetRange(0, 360);
+	sldDecTheta->SetPos(45);
+
 	cbClrz->EnableOtherButton(_T("custom")); 
     cbClrz->SetColor(RGB(100, 100, 255)); 
 	OnBnClickedMfccolorbutton1clrz();
@@ -256,5 +268,24 @@ void CimgCompletionDlg::OnBnClickedButton1()
 
 void CimgCompletionDlg::OnBnClickedbopendec()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	CFileDialog dlgFile(1);
+	if(dlgFile.DoModal() == IDOK)
+	{
+		CString pathname = dlgFile.GetPathName();
+		dec::init(pathname);
+	}	
+}
+
+
+void CimgCompletionDlg::OnNMReleasedcaptureSliderDecAlpha(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	dec::onAlphaChanged(sldDecAlpha->GetPos());
+	*pResult = 0;
+}
+
+
+void CimgCompletionDlg::OnNMReleasedcaptureSliderDecTheta(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	dec::onThetaChanged(sldDecTheta->GetPos());
+	*pResult = 0;
 }
